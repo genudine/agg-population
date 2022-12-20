@@ -1,0 +1,15 @@
+name = "agg-population"
+main = "src/index.ts"
+compatibility_date = "2022-12-19"
+
+[vars]
+DISABLE_HONU = "0"
+DISABLE_FISU = "0"
+DISABLE_SAERRO = "0"
+DISABLE_VOIDWELL = "0"
+DISABLE_CACHE = "0"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "4b3b7f55a14c40cc84824fd0a3f58ff4"
+preview_id = "3c0ce37f56be4bd998fc6f36a7a685dc"
