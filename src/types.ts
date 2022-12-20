@@ -9,6 +9,11 @@ export interface ServiceResponse<PT extends number | undefined, Raw> {
   population: Population<PT>;
   raw: Raw;
   cachedAt: Date;
+  timings?: {
+    enter: number;
+    upstream: number;
+    exit: number;
+  };
 }
 
 export interface Env {
@@ -38,6 +43,12 @@ export type OnePayload = {
 
 export type DebugPayload = {
   raw: {
+    saerro: any;
+    fisu: any;
+    honu: any;
+    voidwell: any;
+  };
+  timings: {
     saerro: any;
     fisu: any;
     honu: any;

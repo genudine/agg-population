@@ -1,7 +1,7 @@
 import { Route, Router, RouterType } from "itty-router";
 import { handleAll, handleOne, index } from "./handlers";
 import { Env, Flags } from "./types";
-import { WorldCache } from "./cache";
+import { Cache } from "./cache";
 
 interface BasicRouter extends RouterType {
   all: Route;
@@ -11,9 +11,14 @@ interface BasicRouter extends RouterType {
 const router = <BasicRouter>Router();
 
 router
-  .get<BasicRouter>("/", index)
-  .get<BasicRouter>("/all", handleAll)
-  .get<BasicRouter>("/:id", handleOne)
+  .get<BasicRouter>(
+    "/",
+    () =>
+      new Response(null, { status: 303, headers: { location: "/population/" } })
+  )
+  .get<BasicRouter>("/population/", index)
+  .get<BasicRouter>("/population/all", handleAll)
+  .get<BasicRouter>("/population/:id", handleOne)
   .all<BasicRouter>("*", () => {
     return new Response("Not found", {
       headers: { "content-type": "text/plain" },
@@ -22,7 +27,7 @@ router
 
 export default {
   fetch: async (request: Request, env: Env, ctx: ExecutionContext) => {
-    const worldCache = new WorldCache(env.CACHE, env.DISABLE_CACHE === "1");
+    const worldCache = new Cache(env.CACHE, env.DISABLE_CACHE === "1");
 
     const flags: Flags = {
       disableFisu: env.DISABLE_FISU === "1",
@@ -30,6 +35,8 @@ export default {
       disableSaerro: env.DISABLE_SAERRO === "1",
       disableVoidwell: env.DISABLE_VOIDWELL === "1",
     };
+
+    const start = Date.now();
 
     return router
       .handle(request as any, env, ctx, worldCache, flags)
@@ -39,6 +46,7 @@ export default {
           "access-control-allow-method",
           "GET, HEAD, OPTIONS"
         );
+        response.headers.set("x-timing", `${Date.now() - start}ms`);
         return response;
       });
   },

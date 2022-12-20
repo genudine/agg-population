@@ -1,17 +1,21 @@
+import { Cache } from "../cache";
 import { Population, ServiceResponse } from "../types";
 
-interface OneResponse {
+interface SaerroResponse {
   data: {
-    world: {
-      id: string;
+    allWorlds: {
+      id: number;
       population: Population<number>;
-    };
+    }[];
   };
 }
 
-export const saerroFetchWorld = async (
-  id: string
-): Promise<ServiceResponse<number, OneResponse>> => {
+const saerroFetchAllWorlds = async (cache: Cache): Promise<SaerroResponse> => {
+  const cached = await cache.get<SaerroResponse>("saerro");
+  if (cached) {
+    return cached;
+  }
+
   const req = await fetch(`https://saerro.ps2.live/graphql`, {
     method: "POST",
     headers: {
@@ -19,7 +23,7 @@ export const saerroFetchWorld = async (
     },
     body: JSON.stringify({
       query: `{
-                world(by: {id: ${id}}) {
+                allWorlds {
                   id 
                   population {
                     total
@@ -32,11 +36,32 @@ export const saerroFetchWorld = async (
     }),
   });
 
-  const json: OneResponse = await req.json();
+  return await cache.put("saerro", await req.json<SaerroResponse>());
+};
+
+export const saerroFetchWorld = async (
+  id: string,
+  cache: Cache
+): Promise<ServiceResponse<number, SaerroResponse["data"]["allWorlds"][1]>> => {
+  const start = Date.now();
+
+  const json: SaerroResponse = await saerroFetchAllWorlds(cache);
+  const end = Date.now();
+
+  const world = json.data.allWorlds.find((w) => w.id === Number(id));
+
+  if (!world) {
+    throw new Error(`World ${id} not found`);
+  }
 
   return {
-    population: json.data.world.population,
-    raw: json,
+    population: world.population,
+    raw: world,
     cachedAt: new Date(),
+    timings: {
+      enter: start,
+      exit: end,
+      upstream: end - start,
+    },
   };
 };

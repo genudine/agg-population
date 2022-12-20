@@ -4,8 +4,8 @@ import { fisuFetchWorld } from "./sources/fisu";
 import { honuFetchWorld } from "./sources/honu";
 import { voidwellFetchWorld } from "./sources/voidwell";
 import { noData } from "./errors";
-import { DebugPayload, Flags, OnePayload } from "./types";
-import { WorldCache } from "./cache";
+import { DebugPayload, Flags, OnePayload, ServiceResponse } from "./types";
+import { Cache } from "./cache";
 
 const avgOf = (arr: number[]) =>
   Math.floor(arr.reduce((a, b) => a + b, 0) / arr.length);
@@ -13,35 +13,43 @@ const avgOf = (arr: number[]) =>
 const flatMapBy = (arr: any[], key: string) =>
   arr.reduce((a, b) => [...a, b[key]], []);
 
-const defaultServiceResponse = {
+const defaultServiceResponse: ServiceResponse<number, null> = {
   population: {
     total: -1,
-    nc: null,
-    tr: null,
-    vs: null,
+    nc: -1,
+    tr: -1,
+    vs: -1,
   },
   raw: null,
-  cachedAt: undefined,
+  cachedAt: new Date(),
 };
 
-export const getWorld = async (id: string, cache: WorldCache, flags: Flags) => {
-  const cached = await cache.get(id);
+type World = {
+  world: OnePayload | null;
+  debug: DebugPayload;
+};
+
+export const getWorld = async (id: string, cache: Cache, flags: Flags) => {
+  const cached = await cache.get<World>(id);
   if (cached) {
     return cached;
   }
 
   const [saerro, fisu, honu, voidwell] = await Promise.all([
     !flags.disableSaerro
-      ? saerroFetchWorld(id).catch(() => defaultServiceResponse)
+      ? saerroFetchWorld(id, cache).catch((e) => {
+          console.error("SAERRO ERROR:", e);
+          return defaultServiceResponse;
+        })
       : defaultServiceResponse,
     !flags.disableFisu
-      ? fisuFetchWorld(id).catch(() => defaultServiceResponse)
+      ? fisuFetchWorld(id, cache).catch(() => defaultServiceResponse)
       : defaultServiceResponse,
     !flags.disableHonu
-      ? honuFetchWorld(id).catch(() => defaultServiceResponse)
+      ? honuFetchWorld(id, cache).catch(() => defaultServiceResponse)
       : defaultServiceResponse,
     !flags.disableVoidwell
-      ? voidwellFetchWorld(id).catch(() => defaultServiceResponse)
+      ? voidwellFetchWorld(id, cache).catch(() => defaultServiceResponse)
       : defaultServiceResponse,
   ]);
 
@@ -51,6 +59,12 @@ export const getWorld = async (id: string, cache: WorldCache, flags: Flags) => {
       fisu: fisu.raw,
       honu: honu.raw,
       voidwell: voidwell.raw,
+    },
+    timings: {
+      saerro: saerro?.timings || null,
+      fisu: fisu?.timings || null,
+      honu: honu?.timings || null,
+      voidwell: voidwell?.timings || null,
     },
     lastFetchTimes: {
       saerro: saerro.cachedAt,
@@ -68,7 +82,7 @@ export const getWorld = async (id: string, cache: WorldCache, flags: Flags) => {
   ].filter((x) => x > 0);
 
   if (totalPopulations.length === 0) {
-    return await cache.put(id, {
+    return await cache.put<World>(id, {
       world:
         id !== "19"
           ? null
@@ -121,10 +135,10 @@ export const handleOne = async (
   { params: { id }, query: { debug: debugParam } }: IRequest,
   _1: unknown,
   _2: unknown,
-  worldCache: WorldCache,
+  Cache: Cache,
   flags: Flags
 ) => {
-  const { world, debug } = await getWorld(id, worldCache, flags);
+  const { world, debug } = await getWorld(id, Cache, flags);
 
   if (world === null) {
     return noData();
@@ -144,22 +158,29 @@ export const handleOne = async (
 };
 
 export const handleAll = async (
-  _1: unknown,
+  { query: { debug } }: IRequest,
   _2: unknown,
   _3: unknown,
-  worldCache: WorldCache,
+  Cache: Cache,
   flags: Flags
 ): Promise<Response> => {
   const worlds = ["1", "10", "13", "17", "19", "40", "1000", "2000"];
 
-  const worldData = await Promise.all(
-    worlds.map((x) =>
-      getWorld(x, worldCache, flags).catch(() => {
-        error: "World data is missing. Is it down?";
-      })
-    )
-  );
-  const worldPayloads = worldData.map((x) => x?.world || x);
+  const worldData = [];
+
+  for (const world of worlds) {
+    worldData.push(await getWorld(world, Cache, flags));
+  }
+
+  if (debug === "1") {
+    return new Response(JSON.stringify(worldData), {
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+  }
+
+  const worldPayloads = worldData.map((x: any) => x.world || x);
 
   return new Response(JSON.stringify(worldPayloads), {
     headers: {
@@ -258,9 +279,11 @@ GET /all - Get all worlds
     }
   ]
 
+  -- This also has a debug query parameter, but it's extremely verbose. It's good for debugging extreme async issues with the platform.
+
 ## Caching and usage limits
 
-This service cached on a world basis for 3 minutes.`;
+This service cached on a world basis for 3 minutes. Debug data is cached alongside world data too.`;
 
   return new Response(body, {
     headers: {

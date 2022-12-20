@@ -2,6 +2,10 @@ name = "agg-population"
 main = "src/index.ts"
 compatibility_date = "2022-12-19"
 
+[route]
+pattern = "agg.ps2.live/population*"
+zone_name = "ps2.live"
+
 [vars]
 DISABLE_HONU = "0"
 DISABLE_FISU = "0"
