@@ -23,6 +23,7 @@ export interface Env {
   DISABLE_SAERRO: "1" | undefined;
   DISABLE_VOIDWELL: "1" | undefined;
   DISABLE_CACHE: "1" | undefined;
+  VOIDWELL_USE_PS4: "1" | undefined;
 }
 
 export type OnePayload = {
@@ -67,4 +68,5 @@ export type Flags = {
   disableFisu: boolean;
   disableSaerro: boolean;
   disableVoidwell: boolean;
+  voidwellUsePS4: boolean;
 };

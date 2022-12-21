@@ -34,6 +34,7 @@ export default {
       disableHonu: env.DISABLE_HONU === "1",
       disableSaerro: env.DISABLE_SAERRO === "1",
       disableVoidwell: env.DISABLE_VOIDWELL === "1",
+      voidwellUsePS4: env.VOIDWELL_USE_PS4 === "1",
     };
 
     const start = Date.now();

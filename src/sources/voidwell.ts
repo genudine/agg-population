@@ -26,7 +26,8 @@ type VoidwellResponse = Array<{
 }>;
 
 const voidwellFetchAllWorlds = async (
-  cache: Cache
+  cache: Cache,
+  usePS4: boolean
 ): Promise<VoidwellResponse> => {
   const cached = await cache.get<VoidwellResponse>("voidwell");
   if (cached) {
@@ -40,18 +41,22 @@ const voidwellFetchAllWorlds = async (
         console.error("voidwell PC ERROR", e);
         return [] as VoidwellResponse;
       }),
-    fetch(`https://api.voidwell.com/ps2/worldstate/?platform=ps4us`)
-      .then((res) => res.json<VoidwellResponse>())
-      .catch((e) => {
-        console.error("voidwell PS4US ERROR", e);
-        return [] as VoidwellResponse;
-      }),
-    fetch(`https://api.voidwell.com/ps2/worldstate/?platform=ps4eu`)
-      .then((res) => res.json<VoidwellResponse>())
-      .catch((e) => {
-        console.error("voidwell PS4EU ERROR", e);
-        return [] as VoidwellResponse;
-      }),
+    usePS4
+      ? fetch(`https://api.voidwell.com/ps2/worldstate/?platform=ps4us`)
+          .then((res) => res.json<VoidwellResponse>())
+          .catch((e) => {
+            console.error("voidwell PS4US ERROR", e);
+            return [] as VoidwellResponse;
+          })
+      : [],
+    usePS4
+      ? fetch(`https://api.voidwell.com/ps2/worldstate/?platform=ps4eu`)
+          .then((res) => res.json<VoidwellResponse>())
+          .catch((e) => {
+            console.error("voidwell PS4EU ERROR", e);
+            return [] as VoidwellResponse;
+          })
+      : [],
   ]);
 
   // console.log("voidwell data fetched", JSON.stringify({ pc, ps4us, ps4eu }));
@@ -68,10 +73,25 @@ const voidwellFetchAllWorlds = async (
 // we're stuck with not counting faction populations.
 export const voidwellFetchWorld = async (
   worldID: string,
-  cache: Cache
-): Promise<ServiceResponse<undefined, VoidwellResponse[0]>> => {
+  cache: Cache,
+  usePS4: boolean
+): Promise<ServiceResponse<undefined, VoidwellResponse[0] | null>> => {
+  if (!usePS4 && (worldID === "1000" || worldID === "2000")) {
+    // Voidwell doesn't support PS4 well enough.
+    return {
+      raw: null,
+      population: {
+        total: -1,
+        nc: undefined,
+        tr: undefined,
+        vs: undefined,
+      },
+      cachedAt: new Date(0),
+    };
+  }
+
   const start = Date.now();
-  const data = await voidwellFetchAllWorlds(cache);
+  const data = await voidwellFetchAllWorlds(cache, usePS4);
   const end = Date.now();
 
   const world = data.find((w) => w.id === Number(worldID));

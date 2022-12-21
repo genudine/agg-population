@@ -49,7 +49,9 @@ export const getWorld = async (id: string, cache: Cache, flags: Flags) => {
       ? honuFetchWorld(id, cache).catch(() => defaultServiceResponse)
       : defaultServiceResponse,
     !flags.disableVoidwell
-      ? voidwellFetchWorld(id, cache).catch(() => defaultServiceResponse)
+      ? voidwellFetchWorld(id, cache, flags.voidwellUsePS4).catch(
+          () => defaultServiceResponse
+        )
       : defaultServiceResponse,
   ]);
 

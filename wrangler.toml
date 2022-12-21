@@ -12,6 +12,7 @@ DISABLE_FISU = "0"
 DISABLE_SAERRO = "0"
 DISABLE_VOIDWELL = "0"
 DISABLE_CACHE = "0"
+VOIDWELL_USE_PS4 = "0"
 
 [[kv_namespaces]]
 binding = "CACHE"
