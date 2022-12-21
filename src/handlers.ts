@@ -1,6 +1,6 @@
 import { IRequest } from "itty-router";
 import { noData } from "./errors";
-import { DebugPayload, Flags, OnePayload, ServiceResponse } from "./types";
+import { DebugPayload, Flags, OnePayload } from "./types";
 import { Cache } from "./cache";
 import { getWorld } from "./fetcher";
 
@@ -37,7 +37,7 @@ export const handleAll = async (
   cache: Cache,
   flags: Flags
 ): Promise<Response> => {
-  const cached = await cache.get("all");
+  const cached = await cache.get(`all${debug ? ".debug" : ""}`);
   if (cached) {
     return new Response(JSON.stringify(cached), {
       headers: {
@@ -55,7 +55,7 @@ export const handleAll = async (
   }
 
   await worldTasks[0]; // Force the first one to cache for the rest
-  const worldData = await Promise.all(worldTasks.slice(1));
+  const worldData = await Promise.all(worldTasks);
 
   if (debug === "1") {
     return new Response(JSON.stringify(worldData), {
@@ -67,7 +67,7 @@ export const handleAll = async (
 
   const worldPayloads = worldData.map((x: any) => x.world || x);
 
-  await cache.put("all", worldPayloads);
+  await cache.put(`all${debug ? ".debug" : ""}`, worldPayloads);
 
   return new Response(JSON.stringify(worldPayloads), {
     headers: {
