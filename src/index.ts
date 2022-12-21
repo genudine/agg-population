@@ -35,6 +35,7 @@ export default {
       disableSaerro: env.DISABLE_SAERRO === "1",
       disableVoidwell: env.DISABLE_VOIDWELL === "1",
       voidwellUsePS4: env.VOIDWELL_USE_PS4 === "1",
+      fisuUsePS4EU: env.FISU_USE_PS4EU === "1",
     };
 
     const start = Date.now();

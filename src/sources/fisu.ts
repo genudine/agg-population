@@ -14,7 +14,10 @@ interface FisuResponse {
   >;
 }
 
-const fisuFetchAllWorlds = async (cache: Cache): Promise<FisuResponse> => {
+const fisuFetchAllWorlds = async (
+  cache: Cache,
+  usePS4EU: boolean
+): Promise<FisuResponse> => {
   const cached = await cache.get<FisuResponse>("fisu");
   if (cached) {
     // console.log("FISU data cached", cached);
@@ -34,12 +37,14 @@ const fisuFetchAllWorlds = async (cache: Cache): Promise<FisuResponse> => {
         console.error("FISU PS4US ERROR", e);
         return { result: {} } as FisuResponse;
       }),
-    fetch(`https://ps4eu.ps2.fisu.pw/api/population/?world=2000`)
-      .then((res) => res.json<FisuResponse>())
-      .catch((e) => {
-        console.error("FISU PS4EU ERROR", e);
-        return { result: {} } as FisuResponse;
-      }),
+    usePS4EU
+      ? fetch(`https://ps4eu.ps2.fisu.pw/api/population/?world=2000`)
+          .then((res) => res.json<FisuResponse>())
+          .catch((e) => {
+            console.error("FISU PS4EU ERROR", e);
+            return { result: {} } as FisuResponse;
+          })
+      : ({ result: {} } as FisuResponse),
   ]).catch((e) => {
     console.error("FISU ERROR", e);
     return [{ result: {} }, { result: {} }, { result: {} }] as FisuResponse[];
@@ -59,10 +64,24 @@ const fisuFetchAllWorlds = async (cache: Cache): Promise<FisuResponse> => {
 
 export const fisuFetchWorld = async (
   worldID: string,
-  cache: Cache
+  cache: Cache,
+  usePS4EU: boolean
 ): Promise<ServiceResponse<number, any>> => {
+  if (!usePS4EU && worldID === "2000") {
+    return {
+      population: {
+        total: -1,
+        nc: -1,
+        tr: -1,
+        vs: -1,
+      },
+      raw: null,
+      cachedAt: new Date(0),
+    };
+  }
+
   const start = Date.now();
-  const data: FisuResponse = await fisuFetchAllWorlds(cache);
+  const data: FisuResponse = await fisuFetchAllWorlds(cache, usePS4EU);
   const end = Date.now();
 
   const world = data.result[worldID];

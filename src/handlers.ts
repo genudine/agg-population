@@ -43,7 +43,9 @@ export const getWorld = async (id: string, cache: Cache, flags: Flags) => {
         })
       : defaultServiceResponse,
     !flags.disableFisu
-      ? fisuFetchWorld(id, cache).catch(() => defaultServiceResponse)
+      ? fisuFetchWorld(id, cache, flags.fisuUsePS4EU).catch(
+          () => defaultServiceResponse
+        )
       : defaultServiceResponse,
     !flags.disableHonu
       ? honuFetchWorld(id, cache).catch(() => defaultServiceResponse)
