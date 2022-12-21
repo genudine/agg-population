@@ -51,7 +51,7 @@ router
       }),
       {
         headers: { "content-type": "application/json" },
-        status: saerro && voidwell && honu && fisu ? 200 : 502,
+        status: saerro || voidwell || honu || fisu ? 200 : 502,
       }
     );
   })
