@@ -1,7 +1,8 @@
 import { Route, Router, RouterType } from "itty-router";
-import { handleAll, handleOne, index } from "./handlers";
+import { handleAll, handleOne } from "./handlers";
 import { Env, Flags } from "./types";
 import { Cache } from "./cache";
+import { index } from "./landing";
 
 interface BasicRouter extends RouterType {
   all: Route;
@@ -33,6 +34,27 @@ router
       );
     }
   )
+  .get<BasicRouter>("/population~/health", async () => {
+    const [saerro, voidwell, honu, fisu] = await Promise.all([
+      fetch("https://saerro.ps2.live/health").then((r) => r.status === 200),
+      fetch("https://voidwell.com/").then((r) => r.status === 200),
+      fetch("https://wt.honu.pw/api/health").then((r) => r.status === 200),
+      fetch("https://ps2.fisu.pw").then((r) => r.status === 200),
+    ]);
+
+    return new Response(
+      JSON.stringify({
+        saerro,
+        voidwell,
+        honu,
+        fisu,
+      }),
+      {
+        headers: { "content-type": "application/json" },
+        status: saerro && voidwell && honu && fisu ? 200 : 502,
+      }
+    );
+  })
   .all<BasicRouter>("*", () => {
     return new Response("Not found", {
       headers: { "content-type": "text/plain" },
