@@ -19,6 +19,20 @@ router
   .get<BasicRouter>("/population/", index)
   .get<BasicRouter>("/population/all", handleAll)
   .get<BasicRouter>("/population/:id", handleOne)
+  .get<BasicRouter>(
+    "/population~/flags",
+    (_1, _2, _3, cache: Cache, flags: Flags) => {
+      return new Response(
+        JSON.stringify({
+          ...flags,
+          disableCache: cache.disableCache,
+        }),
+        {
+          headers: { "content-type": "application/json" },
+        }
+      );
+    }
+  )
   .all<BasicRouter>("*", () => {
     return new Response("Not found", {
       headers: { "content-type": "text/plain" },
