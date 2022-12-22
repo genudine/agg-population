@@ -51,7 +51,7 @@ export const saerroFetchWorld = async (
   const world = json.data.allWorlds.find((w) => w.id === Number(id));
 
   if (!world) {
-    throw new Error(`World ${id} not found`);
+    throw new Error(`saerro: World ${id} not found`);
   }
 
   return {

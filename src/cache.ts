@@ -20,7 +20,7 @@ export class Cache {
     return item;
   }
 
-  async put<T>(id: string, world: T): Promise<T> {
+  async put<T>(id: string, world: T, ttl: number = 60 * 3): Promise<T> {
     if (this.disableCache) {
       return world;
     }
@@ -28,7 +28,7 @@ export class Cache {
     this.cache.set(id, world);
 
     await this.kv.put(id, JSON.stringify(world), {
-      expirationTtl: 60 * 3,
+      expirationTtl: ttl,
     });
 
     return world;

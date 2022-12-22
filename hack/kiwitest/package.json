@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "socket.io-client": "2.x",
+    "ws": "^8.11.0"
+  }
+}

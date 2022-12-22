@@ -1,6 +1,7 @@
 import { Cache } from "./cache";
 import { fisuFetchWorld } from "./sources/fisu";
 import { honuFetchWorld } from "./sources/honu";
+import { kiwiFetchWorld } from "./sources/kiwi";
 import { saerroFetchWorld } from "./sources/saerro";
 import { voidwellFetchWorld } from "./sources/voidwell";
 import { DebugPayload, Flags, OnePayload, ServiceResponse } from "./types";
@@ -33,7 +34,7 @@ export const getWorld = async (id: string, cache: Cache, flags: Flags) => {
     return cached;
   }
 
-  const [saerro, fisu, honu, voidwell] = await Promise.all([
+  const [saerro, fisu, honu, voidwell, kiwi] = await Promise.all([
     !flags.disableSaerro
       ? saerroFetchWorld(id, cache).catch((e) => {
           console.error("SAERRO ERROR:", e);
@@ -53,6 +54,9 @@ export const getWorld = async (id: string, cache: Cache, flags: Flags) => {
           () => defaultServiceResponse
         )
       : defaultServiceResponse,
+    !flags.disableKiwi
+      ? kiwiFetchWorld(id, cache).catch(() => defaultServiceResponse)
+      : defaultServiceResponse,
   ]);
 
   const debug: DebugPayload = {
@@ -61,18 +65,21 @@ export const getWorld = async (id: string, cache: Cache, flags: Flags) => {
       fisu: fisu.raw,
       honu: honu.raw,
       voidwell: voidwell.raw,
+      kiwi: kiwi.raw,
     },
     timings: {
       saerro: saerro?.timings || null,
       fisu: fisu?.timings || null,
       honu: honu?.timings || null,
       voidwell: voidwell?.timings || null,
+      kiwi: kiwi?.timings || null,
     },
     lastFetchTimes: {
       saerro: saerro.cachedAt,
       fisu: fisu.cachedAt,
       honu: honu.cachedAt,
       voidwell: voidwell.cachedAt,
+      kiwi: kiwi.cachedAt,
     },
   };
 
@@ -81,6 +88,7 @@ export const getWorld = async (id: string, cache: Cache, flags: Flags) => {
     fisu.population.total,
     honu.population.total,
     voidwell.population.total,
+    kiwi.population.total,
   ].filter((x) => x > 0);
 
   if (totalPopulations.length === 0) {
@@ -127,6 +135,7 @@ export const getWorld = async (id: string, cache: Cache, flags: Flags) => {
       fisu: fisu.population.total,
       honu: honu.population.total,
       voidwell: voidwell.population.total,
+      kiwi: kiwi.population.total,
     },
   };
 
