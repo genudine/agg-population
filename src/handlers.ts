@@ -38,7 +38,7 @@ export const handleAll = async (
   flags: Flags
 ): Promise<Response> => {
   const cached = await cache.get(`all${debug ? ".debug" : ""}`);
-  if (false && cached) {
+  if (cached) {
     return new Response(JSON.stringify(cached), {
       headers: {
         "content-type": "application/json",

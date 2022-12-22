@@ -14,7 +14,7 @@ DISABLE_VOIDWELL = "0"
 DISABLE_KIWI = "0"
 DISABLE_CACHE = "0"
 VOIDWELL_USE_PS4 = "0"
-FISU_USE_PS4EU = "0"
+FISU_USE_PS4EU = "1"
 
 [[kv_namespaces]]
 binding = "CACHE"
