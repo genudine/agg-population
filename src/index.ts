@@ -35,14 +35,11 @@ router
     }
   )
   .get<BasicRouter>("/population~/health", async () => {
-    const [saerro, voidwell, honu, fisu, kiwi] = await Promise.all([
+    const [saerro, voidwell, honu, fisu] = await Promise.all([
       fetch("https://saerro.ps2.live/health").then((r) => r.status === 200),
       fetch("https://voidwell.com/").then((r) => r.status === 200),
       fetch("https://wt.honu.pw/api/health").then((r) => r.status === 200),
       fetch("https://ps2.fisu.pw").then((r) => r.status === 200),
-      fetch("https://planetside-2-api.herokuapp.com").then(
-        (r) => r.status === 200
-      ),
     ]);
 
     return new Response(
@@ -51,11 +48,10 @@ router
         voidwell,
         honu,
         fisu,
-        kiwi,
       }),
       {
         headers: { "content-type": "application/json" },
-        status: saerro || voidwell || honu || fisu || kiwi ? 200 : 502,
+        status: saerro || voidwell || honu || fisu ? 200 : 502,
       }
     );
   })
@@ -74,9 +70,8 @@ export default {
       disableHonu: env.DISABLE_HONU === "1",
       disableSaerro: env.DISABLE_SAERRO === "1",
       disableVoidwell: env.DISABLE_VOIDWELL === "1",
-      disableKiwi: env.DISABLE_KIWI === "1",
       voidwellUsePS4: env.VOIDWELL_USE_PS4 === "1",
-      fisuUsePS4EU: env.FISU_USE_PS4EU === "1",
+      fisuUsePS4EU: true, // env.FISU_USE_PS4EU === "1",
     };
 
     const start = Date.now();

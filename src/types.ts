@@ -22,7 +22,6 @@ export interface Env {
   DISABLE_FISU: "1" | undefined;
   DISABLE_SAERRO: "1" | undefined;
   DISABLE_VOIDWELL: "1" | undefined;
-  DISABLE_KIWI: "1" | undefined;
   DISABLE_CACHE: "1" | undefined;
   VOIDWELL_USE_PS4: "1" | undefined;
   FISU_USE_PS4EU: "1" | undefined;
@@ -41,7 +40,6 @@ export type OnePayload = {
     fisu: number | null;
     honu: number | null;
     voidwell: number | null;
-    kiwi: number | null;
   };
 };
 
@@ -51,21 +49,18 @@ export type DebugPayload = {
     fisu: any;
     honu: any;
     voidwell: any;
-    kiwi: any;
   };
   timings: {
     saerro: any;
     fisu: any;
     honu: any;
     voidwell: any;
-    kiwi: any;
   };
   lastFetchTimes: {
     saerro?: Date;
     fisu?: Date;
     honu?: Date;
     voidwell?: Date;
-    kiwi?: Date;
   };
 };
 
@@ -74,7 +69,6 @@ export type Flags = {
   disableFisu: boolean;
   disableSaerro: boolean;
   disableVoidwell: boolean;
-  disableKiwi: boolean;
   voidwellUsePS4: boolean;
   fisuUsePS4EU: boolean;
 };

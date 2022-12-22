@@ -13,7 +13,6 @@ This service aggregates the population data from the following sources:
 - https://ps2.fisu.pw/
 - https://wt.honu.pw/
 - https://voidwell.com/ (caveat: no factions, non-standard counting method)
-- https://ps2.nice.kiwi/
 
 ## Routes
 
@@ -31,8 +30,7 @@ GET /:id - Get one world by ID
       "saerro": 282,
       "fisu": 271,
       "honu": 292,
-      "voidwell": 298,
-      "kiwi": 281
+      "voidwell": 298
     }
   }
 
@@ -46,14 +44,12 @@ GET /:id - Get one world by ID
           "fisu": { ... },
           "honu": { ... },
           "voidwell": { ... }
-          "kiwi": { ... }
         },
         "lastFetchTimes": {
           "saerro": "2020-10-10T00:00:00.000Z",
           "fisu": "2020-10-10T00:00:00.000Z",
           "honu": "2020-10-10T00:00:00.000Z",
           "voidwell": "2020-10-10T00:00:00.000Z"
-          "kiwi": "2020-10-10T00:00:00.000Z"
         }
       }
 
@@ -72,8 +68,7 @@ GET /all - Get all worlds
         "saerro": 282,
         "fisu": 271,
         "honu": 292,
-        "voidwell": 298,
-        "kiwi": 281
+        "voidwell": 298
       }
     },
     {
@@ -88,8 +83,7 @@ GET /all - Get all worlds
         "saerro": 95,
         "fisu": 48,
         "honu": 91,
-        "voidwell": 99,
-        "kiwi": 97
+        "voidwell": 99
       }
     }
   ]

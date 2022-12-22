@@ -6,7 +6,6 @@ A Planetside 2 population aggreggation API between
 - https://wt.honu.pw
 - https://saerro.ps2.live
 - https://voidwell.com
-- https://ps2.nice.kiwi
 
 Has some jank filters and will average between all 4 sources with as much data as can be used.
 
