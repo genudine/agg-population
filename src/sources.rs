@@ -99,9 +99,9 @@ pub async fn fisu(world: i32) -> Result<Population, ()> {
         .unwrap();
 
     Ok(Population {
-        nc: response.result[0].nc + response.result[0].ns,
-        tr: response.result[0].tr + response.result[0].ns,
-        vs: response.result[0].vs + response.result[0].ns,
+        nc: response.result[0].nc,
+        tr: response.result[0].tr,
+        vs: response.result[0].vs,
         total: response.result[0].nc
             + response.result[0].tr
             + response.result[0].vs

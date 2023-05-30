@@ -19,7 +19,7 @@ job "agg-population" {
       driver = "docker"
 
       config {
-        image = "ghcr.io/genudine/agg-population/agg-population:7ef2fe757cec4da36fa9462a09403bbf022f77fa"
+        image = "ghcr.io/genudine/agg-population/agg-population:latest"
         ports = ["http"]
       }
     }
