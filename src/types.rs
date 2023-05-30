@@ -1,12 +1,6 @@
-use std::collections::HashMap;
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct AllResponse {
-    pub worlds: Vec<Response>,
-}
+use std::collections::HashMap;
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Response {

@@ -1,6 +1,6 @@
 use crate::{
     sources::{fisu, honu, saerro, sanctuary, voidwell},
-    types::{AllResponse, Population, Response},
+    types::{Population, Response},
 };
 use axum::{
     extract::{Path, State},
@@ -12,7 +12,7 @@ pub async fn get_one_world(State(db): State<sled::Db>, Path(world): Path<i32>) -
     Json(get_world(db, world).await)
 }
 
-pub async fn get_all_worlds(State(db): State<sled::Db>) -> Json<AllResponse> {
+pub async fn get_all_worlds(State(db): State<sled::Db>) -> Json<Vec<Response>> {
     let mut set = JoinSet::new();
     let mut worlds = vec![Response::default(); 8];
 
@@ -26,7 +26,7 @@ pub async fn get_all_worlds(State(db): State<sled::Db>) -> Json<AllResponse> {
         i += 1;
     }
 
-    Json(AllResponse { worlds })
+    Json(worlds)
 }
 
 async fn get_world(db: sled::Db, world: i32) -> Response {
