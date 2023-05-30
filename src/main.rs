@@ -17,8 +17,9 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
-        .route("/worlds/all", get(get_all_worlds))
-        .route("/worlds/:world", get(get_one_world))
+        .route("/population", get(root))
+        .route("/population/all", get(get_all_worlds))
+        .route("/population/:world", get(get_one_world))
         .layer(TraceLayer::new_for_http())
         .with_state(db);
 
