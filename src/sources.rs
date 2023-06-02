@@ -1,3 +1,5 @@
+use chrono::{Duration, Utc};
+
 use crate::types::Population;
 
 pub async fn saerro(world: i32) -> Result<Population, ()> {
@@ -190,6 +192,7 @@ pub async fn sanctuary(world: i32) -> Result<Population, ()> {
     #[derive(serde::Deserialize)]
     struct World {
         pub population: SanctuaryPopulation,
+        pub timestamp: i64,
     }
 
     #[derive(serde::Deserialize)]
@@ -214,6 +217,13 @@ pub async fn sanctuary(world: i32) -> Result<Population, ()> {
         .json::<Root>()
         .await
         .unwrap();
+
+    // error if over 15 minutes old
+    if response.world_population_list[0].timestamp
+        < (Utc::now() - Duration::minutes(15)).timestamp()
+    {
+        return Err(());
+    }
 
     Ok(Population {
         nc: response.world_population_list[0].population.nc,
