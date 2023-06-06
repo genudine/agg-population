@@ -118,6 +118,8 @@ pub async fn voidwell(world: i32) -> Result<Population, ()> {
 
     #[derive(serde::Deserialize)]
     struct Root {
+        #[serde(rename = "onlineCharacters")]
+        pub online_characters: i32,
         #[serde(rename = "zoneStates")]
         pub zone_states: Vec<ZoneState>,
     }
@@ -152,29 +154,39 @@ pub async fn voidwell(world: i32) -> Result<Population, ()> {
         .await
         .unwrap();
 
+    let ns_avg: i32 = response
+        .zone_states
+        .iter()
+        .map(|zone| zone.population.ns)
+        .sum::<i32>()
+        / 3;
+
+    let nc = response
+        .zone_states
+        .iter()
+        .map(|zone| zone.population.nc)
+        .sum::<i32>()
+        + ns_avg;
+
+    let tr = response
+        .zone_states
+        .iter()
+        .map(|zone| zone.population.tr)
+        .sum::<i32>()
+        + ns_avg;
+
+    let vs = response
+        .zone_states
+        .iter()
+        .map(|zone| zone.population.vs)
+        .sum::<i32>()
+        + ns_avg;
+
     Ok(Population {
-        nc: response
-            .zone_states
-            .iter()
-            .map(|zone| zone.population.nc)
-            .sum(),
-        tr: response
-            .zone_states
-            .iter()
-            .map(|zone| zone.population.tr)
-            .sum(),
-        vs: response
-            .zone_states
-            .iter()
-            .map(|zone| zone.population.vs)
-            .sum(),
-        total: response
-            .zone_states
-            .iter()
-            .map(|zone| {
-                zone.population.nc + zone.population.tr + zone.population.vs + zone.population.ns
-            })
-            .sum(),
+        nc,
+        tr,
+        vs,
+        total: response.online_characters,
     })
 }
 
