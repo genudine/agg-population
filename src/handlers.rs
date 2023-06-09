@@ -6,13 +6,19 @@ use axum::{
     extract::{Path, State},
     Json,
 };
+use r2d2_sqlite::{rusqlite::params, SqliteConnectionManager};
 use tokio::task::JoinSet;
 
-pub async fn get_one_world(State(db): State<sled::Db>, Path(world): Path<i32>) -> Json<Response> {
+pub async fn get_one_world(
+    State(db): State<r2d2::Pool<SqliteConnectionManager>>,
+    Path(world): Path<i32>,
+) -> Json<Response> {
     Json(get_world(db, world, false).await)
 }
 
-pub async fn get_all_worlds(State(db): State<sled::Db>) -> Json<Vec<Response>> {
+pub async fn get_all_worlds(
+    State(db): State<r2d2::Pool<SqliteConnectionManager>>,
+) -> Json<Vec<Response>> {
     let mut set = JoinSet::new();
     let mut worlds = vec![Response::default(); 8];
 
@@ -29,7 +35,11 @@ pub async fn get_all_worlds(State(db): State<sled::Db>) -> Json<Vec<Response>> {
     Json(worlds)
 }
 
-pub async fn get_world(db: sled::Db, world: i32, skip_cache: bool) -> Response {
+pub async fn get_world(
+    db: r2d2::Pool<SqliteConnectionManager>,
+    world: i32,
+    skip_cache: bool,
+) -> Response {
     if !skip_cache {
         if let Ok(data) = world_from_cache(db.clone(), world) {
             return data;
@@ -74,14 +84,16 @@ pub async fn get_world(db: sled::Db, world: i32, skip_cache: bool) -> Response {
     response
 }
 
-fn world_from_cache(db: sled::Db, world: i32) -> Result<Response, ()> {
-    let key = format!("world:{}", world);
-    let value = match db.get(key) {
-        Ok(Some(value)) => value,
-        _ => return Err(()),
-    };
+fn world_from_cache(db: r2d2::Pool<SqliteConnectionManager>, world: i32) -> Result<Response, ()> {
+    let db = db.get().unwrap();
+    let mut query = db.prepare("SELECT data FROM worlds WHERE id = ?").unwrap();
+    let value: Result<Vec<u8>, _> = query.query_row(params![world], |r| r.get(0));
 
-    match bincode::deserialize::<Response>(&value) {
+    if value.is_err() {
+        return Err(());
+    }
+
+    match bincode::deserialize::<Response>(value.unwrap().as_slice()) {
         Ok(response) => {
             if response.cached_at + chrono::Duration::minutes(5) < chrono::Utc::now() {
                 return Err(());
@@ -92,8 +104,9 @@ fn world_from_cache(db: sled::Db, world: i32) -> Result<Response, ()> {
     }
 }
 
-fn world_to_cache(db: sled::Db, world: i32, response: &Response) {
-    let key = format!("world:{}", world);
+fn world_to_cache(db: r2d2::Pool<SqliteConnectionManager>, world: i32, response: &Response) {
     let value = bincode::serialize(response).unwrap();
-    db.insert(key, value).unwrap();
+    let db = db.get().unwrap();
+    let mut query = db.prepare("INSERT INTO worlds (id, data) VALUES (?, ?) ON CONFLICT DO UPDATE SET data=excluded.data").unwrap();
+    query.execute(params![world, value]).unwrap();
 }

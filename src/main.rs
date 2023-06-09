@@ -1,5 +1,6 @@
 use crate::handlers::{get_all_worlds, get_one_world, get_world};
 use axum::{response::Html, routing::get, Router};
+use r2d2_sqlite::{rusqlite::params, SqliteConnectionManager};
 use std::net::SocketAddr;
 use tokio::task::JoinSet;
 use tower_http::trace::TraceLayer;
@@ -14,7 +15,15 @@ async fn main() {
         .with_env_filter("tower_http=trace")
         .init();
 
-    let db = sled::open("/tmp/agg-population").expect("open");
+    let sqlite_manager = SqliteConnectionManager::memory();
+    let pool = r2d2::Pool::new(sqlite_manager).unwrap();
+    pool.get()
+        .unwrap()
+        .execute(
+            "CREATE TABLE worlds (id INTEGER NOT NULL PRIMARY KEY, data BLOB);",
+            params![],
+        )
+        .unwrap();
 
     let app = Router::new()
         .route("/", get(root))
@@ -22,13 +31,13 @@ async fn main() {
         .route("/population/all", get(get_all_worlds))
         .route("/population/:world", get(get_one_world))
         .layer(TraceLayer::new_for_http())
-        .with_state(db.clone());
+        .with_state(pool.clone());
 
     tokio::spawn(async move {
         loop {
             let mut set = JoinSet::new();
             for world in vec![1, 10, 13, 17, 19, 40, 1000, 2000] {
-                set.spawn(get_world(db.clone(), world, true));
+                set.spawn(get_world(pool.clone(), world, true));
             }
 
             while let Some(_) = set.join_next().await {}
