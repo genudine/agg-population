@@ -9,7 +9,7 @@ use axum::{
 use tokio::task::JoinSet;
 
 pub async fn get_one_world(State(db): State<sled::Db>, Path(world): Path<i32>) -> Json<Response> {
-    Json(get_world(db, world).await)
+    Json(get_world(db, world, false).await)
 }
 
 pub async fn get_all_worlds(State(db): State<sled::Db>) -> Json<Vec<Response>> {
@@ -17,7 +17,7 @@ pub async fn get_all_worlds(State(db): State<sled::Db>) -> Json<Vec<Response>> {
     let mut worlds = vec![Response::default(); 8];
 
     for world in vec![1, 10, 13, 17, 19, 40, 1000, 2000] {
-        set.spawn(get_world(db.clone(), world));
+        set.spawn(get_world(db.clone(), world, false));
     }
 
     let mut i = 0;
@@ -29,9 +29,11 @@ pub async fn get_all_worlds(State(db): State<sled::Db>) -> Json<Vec<Response>> {
     Json(worlds)
 }
 
-async fn get_world(db: sled::Db, world: i32) -> Response {
-    if let Ok(data) = world_from_cache(db.clone(), world) {
-        return data;
+pub async fn get_world(db: sled::Db, world: i32, skip_cache: bool) -> Response {
+    if !skip_cache {
+        if let Ok(data) = world_from_cache(db.clone(), world) {
+            return data;
+        }
     }
 
     let mut response = Response::default();
@@ -81,7 +83,7 @@ fn world_from_cache(db: sled::Db, world: i32) -> Result<Response, ()> {
 
     match bincode::deserialize::<Response>(&value) {
         Ok(response) => {
-            if response.cached_at + chrono::Duration::minutes(3) < chrono::Utc::now() {
+            if response.cached_at + chrono::Duration::minutes(5) < chrono::Utc::now() {
                 return Err(());
             }
             Ok(response)
