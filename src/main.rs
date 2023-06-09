@@ -12,7 +12,10 @@ mod types;
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
-        .with_env_filter("tower_http=trace")
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::from_default_env()
+                .add_directive("tower_http=trace".parse().unwrap()),
+        )
         .init();
 
     let sqlite_manager = SqliteConnectionManager::memory();

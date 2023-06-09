@@ -84,29 +84,40 @@ pub async fn get_world(
     response
 }
 
+#[tracing::instrument(skip(db))]
 fn world_from_cache(db: r2d2::Pool<SqliteConnectionManager>, world: i32) -> Result<Response, ()> {
     let db = db.get().unwrap();
     let mut query = db.prepare("SELECT data FROM worlds WHERE id = ?").unwrap();
     let value: Result<Vec<u8>, _> = query.query_row(params![world], |r| r.get(0));
 
     if value.is_err() {
+        tracing::debug!("Cache miss (non-exist) for world {}", world);
         return Err(());
     }
 
     match bincode::deserialize::<Response>(value.unwrap().as_slice()) {
         Ok(response) => {
             if response.cached_at + chrono::Duration::minutes(5) < chrono::Utc::now() {
+                tracing::debug!("Cache miss (expired) for world {}", world);
                 return Err(());
             }
+
+            tracing::debug!("Cache hit for world {}", world);
             Ok(response)
         }
-        _ => Err(()),
+        _ => {
+            tracing::debug!("Cache miss (corrupt) for world {}", world);
+            Err(())
+        }
     }
 }
 
+#[tracing::instrument(skip(db, response))]
 fn world_to_cache(db: r2d2::Pool<SqliteConnectionManager>, world: i32, response: &Response) {
     let value = bincode::serialize(response).unwrap();
     let db = db.get().unwrap();
-    let mut query = db.prepare("INSERT INTO worlds (id, data) VALUES (?, ?) ON CONFLICT DO UPDATE SET data=excluded.data").unwrap();
+    let mut query = db
+        .prepare("INSERT OR REPLACE INTO worlds (id, data) VALUES (?, ?)")
+        .unwrap();
     query.execute(params![world, value]).unwrap();
 }
