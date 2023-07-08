@@ -287,68 +287,33 @@ pub async fn niumside(world: i32) -> Result<Population, ()> {
         .await
         .unwrap();
 
-    let vs: i32 = response
-        .pop
-        .iter()
-        .map(|pop| {
-            pop.zones
-                .iter()
-                .map(|zone| {
-                    zone.factions
-                        .iter()
-                        .find(|faction| faction.faction_id == 1 || faction.faction_id == 4)
-                        .unwrap()
-                        .teams
-                        .iter()
-                        .find(|team| team.team_id == 1)
-                        .unwrap()
-                        .team_population
-                })
-                .sum::<i32>()
-        })
-        .sum::<i32>();
+    fn extract(root: &Root, team_id: i32) -> i32 {
+        root.pop
+            .iter()
+            .map(|pop| {
+                pop.zones
+                    .iter()
+                    .map(|zone| {
+                        let faction = match zone.factions.iter().find(|faction| {
+                            faction.faction_id == team_id || faction.faction_id == 4
+                        }) {
+                            Some(faction) => faction,
+                            None => return 0,
+                        };
 
-    let nc: i32 = response
-        .pop
-        .iter()
-        .map(|pop| {
-            pop.zones
-                .iter()
-                .map(|zone| {
-                    zone.factions
-                        .iter()
-                        .find(|faction| faction.faction_id == 2 || faction.faction_id == 4)
-                        .unwrap()
-                        .teams
-                        .iter()
-                        .find(|team| team.team_id == 2)
-                        .unwrap()
-                        .team_population
-                })
-                .sum::<i32>()
-        })
-        .sum::<i32>();
+                        match faction.teams.iter().find(|team| team.team_id == team_id) {
+                            Some(team) => team.team_population,
+                            None => 0,
+                        }
+                    })
+                    .sum::<i32>()
+            })
+            .sum::<i32>()
+    }
 
-    let tr: i32 = response
-        .pop
-        .iter()
-        .map(|pop| {
-            pop.zones
-                .iter()
-                .map(|zone| {
-                    zone.factions
-                        .iter()
-                        .find(|faction| faction.faction_id == 3 || faction.faction_id == 4)
-                        .unwrap()
-                        .teams
-                        .iter()
-                        .find(|team| team.team_id == 3)
-                        .unwrap()
-                        .team_population
-                })
-                .sum::<i32>()
-        })
-        .sum::<i32>();
+    let vs = extract(&response, 1);
+    let nc = extract(&response, 2);
+    let tr = extract(&response, 3);
 
     Ok(Population {
         nc,
