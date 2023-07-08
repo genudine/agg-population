@@ -247,3 +247,113 @@ pub async fn sanctuary(world: i32) -> Result<Population, ()> {
             + response.world_population_list[0].population.nso,
     })
 }
+
+pub async fn niumside(world: i32) -> Result<Population, ()> {
+    #[derive(serde::Deserialize)]
+    struct Root {
+        pub pop: Vec<Pop>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct Pop {
+        pub zones: Vec<Zone>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct Zone {
+        pub factions: Vec<Faction>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct Faction {
+        pub faction_id: i32,
+        pub teams: Vec<Team>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct Team {
+        pub team_id: i32,
+        pub team_population: i32,
+    }
+
+    let url = format!(
+        "https://niumside-poptracker.shuttleapp.rs/api/population?world={}",
+        world
+    );
+    let response = reqwest::get(url)
+        .await
+        .unwrap()
+        .json::<Root>()
+        .await
+        .unwrap();
+
+    let vs: i32 = response
+        .pop
+        .iter()
+        .map(|pop| {
+            pop.zones
+                .iter()
+                .map(|zone| {
+                    zone.factions
+                        .iter()
+                        .find(|faction| faction.faction_id == 1 || faction.faction_id == 4)
+                        .unwrap()
+                        .teams
+                        .iter()
+                        .find(|team| team.team_id == 1)
+                        .unwrap()
+                        .team_population
+                })
+                .sum::<i32>()
+        })
+        .sum::<i32>();
+
+    let nc: i32 = response
+        .pop
+        .iter()
+        .map(|pop| {
+            pop.zones
+                .iter()
+                .map(|zone| {
+                    zone.factions
+                        .iter()
+                        .find(|faction| faction.faction_id == 2 || faction.faction_id == 4)
+                        .unwrap()
+                        .teams
+                        .iter()
+                        .find(|team| team.team_id == 2)
+                        .unwrap()
+                        .team_population
+                })
+                .sum::<i32>()
+        })
+        .sum::<i32>();
+
+    let tr: i32 = response
+        .pop
+        .iter()
+        .map(|pop| {
+            pop.zones
+                .iter()
+                .map(|zone| {
+                    zone.factions
+                        .iter()
+                        .find(|faction| faction.faction_id == 3 || faction.faction_id == 4)
+                        .unwrap()
+                        .teams
+                        .iter()
+                        .find(|team| team.team_id == 3)
+                        .unwrap()
+                        .team_population
+                })
+                .sum::<i32>()
+        })
+        .sum::<i32>();
+
+    Ok(Population {
+        nc,
+        tr,
+        vs,
+        total: nc + tr + vs,
+    })
+}

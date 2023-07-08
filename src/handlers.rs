@@ -1,5 +1,5 @@
 use crate::{
-    sources::{fisu, honu, saerro, sanctuary, voidwell},
+    sources::{fisu, honu, niumside, saerro, sanctuary, voidwell},
     types::{Population, Response},
 };
 use axum::{
@@ -52,9 +52,10 @@ pub async fn get_world(
     let mut populations: Vec<Population> = Vec::new();
 
     let mut set = JoinSet::new();
-    set.spawn(async move { ("saerro", saerro(world).await) });
     set.spawn(async move { ("honu", honu(world).await) });
     set.spawn(async move { ("fisu", fisu(world).await) });
+    set.spawn(async move { ("saerro", saerro(world).await) });
+    set.spawn(async move { ("niumside", niumside(world).await) });
     set.spawn(async move { ("voidwell", voidwell(world).await) });
     set.spawn(async move { ("sanctuary", sanctuary(world).await) });
 
